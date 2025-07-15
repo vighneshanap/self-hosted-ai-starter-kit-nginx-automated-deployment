@@ -51,22 +51,6 @@ Engineering world, handles large amounts of data safely.
 
 ⭐️ **Private Financial Document Analysis** at minimal cost
 
-### 🔧 Custom Repository Support
-
-The deployment script now supports flexible repository management:
-
-✅ **Dynamic Project Directories** - Automatically creates directories based on repository name (`/opt/<repo-name>`)
-
-✅ **Multi-Project Support** - Deploy multiple AI workflow instances simultaneously
-
-✅ **Existing Configuration Preservation** - Automatically detects and preserves existing `.env` files
-
-✅ **Smart Service Naming** - Creates systemd services named after your repository (`<repo-name>-service`)
-
-**Example Usage:**
-- Default: `/opt/self-hosted-ai-starter-kit/` with service `self-hosted-ai-starter-kit-service`
-- Custom: `/opt/my-ai-workflow/` with service `my-ai-workflow-service`
-
 ## Installation
 
 ### Quick Installation with Automated Deployment Script

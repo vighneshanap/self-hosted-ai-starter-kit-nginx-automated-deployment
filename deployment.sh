@@ -18,9 +18,9 @@ NC='\033[0m' # No Color
 DOMAIN=""
 EMAIL=""
 GITLAB_REPO=""
-PROJECT_DIR="/opt/self-hosted-ai-starter-kit"
+PROJECT_DIR=""  # Will be set based on repository name
 NGINX_CONFIG_FILE=""
-SERVICE_NAME="n8n-ai"
+SERVICE_NAME=""
 GPU_PROFILE="cpu"
 
 # Distribution variables
@@ -69,6 +69,23 @@ ask_yes_no() {
             *) echo "Please answer yes or no." ;;
         esac
     done
+}
+
+# Function to extract repository name and set project directory
+set_project_directory() {
+    local repo_url="$1"
+    local repo_name
+    
+    # Extract repository name from URL
+    # Handle various formats: https://github.com/user/repo.git, https://github.com/user/repo, etc.
+    repo_name=$(basename "$repo_url" .git)
+    
+    # Set project directory and service name based on repository name
+    PROJECT_DIR="/opt/$repo_name"
+    SERVICE_NAME="$repo_name-service"
+    
+    log "Project directory set to: $PROJECT_DIR"
+    log "Service name set to: $SERVICE_NAME"
 }
 
 # Function to detect Linux distribution
@@ -247,6 +264,9 @@ collect_user_input() {
             fi
         done
     fi
+    
+    # Set project directory based on repository name
+    set_project_directory "$GITLAB_REPO"
     
     echo ""
     info "GPU/Hardware Configuration:"
@@ -689,87 +709,117 @@ clone_repository() {
         collect_env_variables
         
         # Setup environment file
-        if [[ -f "$PROJECT_DIR/.env.example" ]]; then
-            log "Setting up environment configuration..."
-            cp "$PROJECT_DIR/.env.example" "$PROJECT_DIR/.env" || {
-                error "Failed to copy .env.example to .env"
-                exit 1
-            }
-            
-            # Update .env with collected configuration
-            log "Configuring environment variables..."
-            
-            # Domain settings
-            sed -i "s|DOMAIN=.*|DOMAIN=$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            
-            # n8n Configuration
-            sed -i "s|N8N_PROTOCOL=.*|N8N_PROTOCOL=https|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|N8N_HOST=.*|N8N_HOST=$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|WEBHOOK_URL=.*|WEBHOOK_URL=https://$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|WEBHOOK_TUNNEL_URL=.*|WEBHOOK_TUNNEL_URL=https://$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            
-            # n8n authentication
-            sed -i "s|N8N_BASIC_AUTH_ACTIVE=.*|N8N_BASIC_AUTH_ACTIVE=true|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|N8N_BASIC_AUTH_USER=.*|N8N_BASIC_AUTH_USER=$N8N_AUTH_USER|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|N8N_BASIC_AUTH_PASSWORD=.*|N8N_BASIC_AUTH_PASSWORD=$N8N_AUTH_PASSWORD|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            
-            # Database settings
-            sed -i "s|POSTGRES_USER=.*|POSTGRES_USER=$POSTGRES_USER|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$POSTGRES_PASSWORD|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=$POSTGRES_DB|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            
-            # n8n encryption and security
-            sed -i "s|N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            sed -i "s|N8N_USER_MANAGEMENT_JWT_SECRET=.*|N8N_USER_MANAGEMENT_JWT_SECRET=$N8N_JWT_SECRET|g" "$PROJECT_DIR/.env" 2>/dev/null || true
-            
-            # If variables don't exist in .env, append them
-            if ! grep -q "DOMAIN=" "$PROJECT_DIR/.env"; then
-                echo "" >> "$PROJECT_DIR/.env"
-                echo "# Domain settings" >> "$PROJECT_DIR/.env"
-                echo "DOMAIN=$DOMAIN" >> "$PROJECT_DIR/.env"
+        EXISTING_ENV=""
+        ENV_SOURCE=""
+        
+        # Check for existing .env file
+        if [[ -f ".env" ]]; then
+            log "Found existing .env file in current directory"
+            EXISTING_ENV="$(pwd)/.env"
+            ENV_SOURCE="current directory"
+        elif [[ -f "/root/.env" ]]; then
+            log "Found existing .env file in /root"
+            EXISTING_ENV="/root/.env"
+            ENV_SOURCE="/root"
+        fi
+        
+        if [[ ! -f "$PROJECT_DIR/.env" ]]; then
+            if [[ -n "$EXISTING_ENV" ]]; then
+                log "Moving existing .env file from $ENV_SOURCE to $PROJECT_DIR/"
+                cp "$EXISTING_ENV" "$PROJECT_DIR/.env" || {
+                    error "Failed to move existing .env file"
+                    exit 1
+                }
+                chmod 600 "$PROJECT_DIR/.env"
+                log "Existing .env file successfully moved and configured"
+                echo ""
+                info "Using existing environment configuration from $ENV_SOURCE"
+                warning "Backup this file securely: $PROJECT_DIR/.env"
+                
+            elif [[ -f "$PROJECT_DIR/.env.example" ]]; then
+                log "Setting up environment configuration from template..."
+                cp "$PROJECT_DIR/.env.example" "$PROJECT_DIR/.env" || {
+                    error "Failed to copy .env.example to .env"
+                    exit 1
+                }
+                
+                # Update .env with collected configuration
+                log "Configuring environment variables..."
+                
+                # Domain settings
+                sed -i "s|DOMAIN=.*|DOMAIN=$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                
+                # n8n Configuration
+                sed -i "s|N8N_PROTOCOL=.*|N8N_PROTOCOL=https|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|N8N_HOST=.*|N8N_HOST=$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|WEBHOOK_URL=.*|WEBHOOK_URL=https://$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|WEBHOOK_TUNNEL_URL=.*|WEBHOOK_TUNNEL_URL=https://$DOMAIN|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                
+                # n8n authentication
+                sed -i "s|N8N_BASIC_AUTH_ACTIVE=.*|N8N_BASIC_AUTH_ACTIVE=true|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|N8N_BASIC_AUTH_USER=.*|N8N_BASIC_AUTH_USER=$N8N_AUTH_USER|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|N8N_BASIC_AUTH_PASSWORD=.*|N8N_BASIC_AUTH_PASSWORD=$N8N_AUTH_PASSWORD|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                
+                # Database settings
+                sed -i "s|POSTGRES_USER=.*|POSTGRES_USER=$POSTGRES_USER|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$POSTGRES_PASSWORD|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|POSTGRES_DB=.*|POSTGRES_DB=$POSTGRES_DB|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                
+                # n8n encryption and security
+                sed -i "s|N8N_ENCRYPTION_KEY=.*|N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                sed -i "s|N8N_USER_MANAGEMENT_JWT_SECRET=.*|N8N_USER_MANAGEMENT_JWT_SECRET=$N8N_JWT_SECRET|g" "$PROJECT_DIR/.env" 2>/dev/null || true
+                
+                # If variables don't exist in .env, append them
+                if ! grep -q "DOMAIN=" "$PROJECT_DIR/.env"; then
+                    echo "" >> "$PROJECT_DIR/.env"
+                    echo "# Domain settings" >> "$PROJECT_DIR/.env"
+                    echo "DOMAIN=$DOMAIN" >> "$PROJECT_DIR/.env"
+                fi
+                
+                if ! grep -q "N8N_BASIC_AUTH_ACTIVE=" "$PROJECT_DIR/.env"; then
+                    echo "" >> "$PROJECT_DIR/.env"
+                    echo "# n8n authentication" >> "$PROJECT_DIR/.env"
+                    echo "N8N_BASIC_AUTH_ACTIVE=true" >> "$PROJECT_DIR/.env"
+                    echo "N8N_BASIC_AUTH_USER=$N8N_AUTH_USER" >> "$PROJECT_DIR/.env"
+                    echo "N8N_BASIC_AUTH_PASSWORD=$N8N_AUTH_PASSWORD" >> "$PROJECT_DIR/.env"
+                fi
+                
+                if ! grep -q "POSTGRES_USER=" "$PROJECT_DIR/.env"; then
+                    echo "" >> "$PROJECT_DIR/.env"
+                    echo "# Database settings" >> "$PROJECT_DIR/.env"
+                    echo "POSTGRES_USER=$POSTGRES_USER" >> "$PROJECT_DIR/.env"
+                    echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> "$PROJECT_DIR/.env"
+                    echo "POSTGRES_DB=$POSTGRES_DB" >> "$PROJECT_DIR/.env"
+                fi
+                
+                if ! grep -q "N8N_ENCRYPTION_KEY=" "$PROJECT_DIR/.env"; then
+                    echo "" >> "$PROJECT_DIR/.env"
+                    echo "# n8n encryption and security" >> "$PROJECT_DIR/.env"
+                    echo "N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY" >> "$PROJECT_DIR/.env"
+                    echo "N8N_USER_MANAGEMENT_JWT_SECRET=$N8N_JWT_SECRET" >> "$PROJECT_DIR/.env"
+                fi
+                
+                # Set proper permissions for .env file
+                chmod 600 "$PROJECT_DIR/.env"
+                
+                log "Environment file configured successfully"
+                echo ""
+                info "Configuration Summary:"
+                info "  Domain: $DOMAIN"
+                info "  N8N Admin User: $N8N_AUTH_USER"
+                info "  Database: $POSTGRES_DB (user: $POSTGRES_USER)"
+                info "  Security: Encryption key and JWT secret configured"
+                echo ""
+                warning "IMPORTANT: Your .env file contains sensitive information."
+                warning "File permissions set to 600 (owner read/write only)"
+                warning "Backup this file securely: $PROJECT_DIR/.env"
+                
+            else
+                warning ".env.example not found in repository"
+                warning "You'll need to create .env file manually"
             fi
-            
-            if ! grep -q "N8N_BASIC_AUTH_ACTIVE=" "$PROJECT_DIR/.env"; then
-                echo "" >> "$PROJECT_DIR/.env"
-                echo "# n8n authentication" >> "$PROJECT_DIR/.env"
-                echo "N8N_BASIC_AUTH_ACTIVE=true" >> "$PROJECT_DIR/.env"
-                echo "N8N_BASIC_AUTH_USER=$N8N_AUTH_USER" >> "$PROJECT_DIR/.env"
-                echo "N8N_BASIC_AUTH_PASSWORD=$N8N_AUTH_PASSWORD" >> "$PROJECT_DIR/.env"
-            fi
-            
-            if ! grep -q "POSTGRES_USER=" "$PROJECT_DIR/.env"; then
-                echo "" >> "$PROJECT_DIR/.env"
-                echo "# Database settings" >> "$PROJECT_DIR/.env"
-                echo "POSTGRES_USER=$POSTGRES_USER" >> "$PROJECT_DIR/.env"
-                echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> "$PROJECT_DIR/.env"
-                echo "POSTGRES_DB=$POSTGRES_DB" >> "$PROJECT_DIR/.env"
-            fi
-            
-            if ! grep -q "N8N_ENCRYPTION_KEY=" "$PROJECT_DIR/.env"; then
-                echo "" >> "$PROJECT_DIR/.env"
-                echo "# n8n encryption and security" >> "$PROJECT_DIR/.env"
-                echo "N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY" >> "$PROJECT_DIR/.env"
-                echo "N8N_USER_MANAGEMENT_JWT_SECRET=$N8N_JWT_SECRET" >> "$PROJECT_DIR/.env"
-            fi
-            
-            # Set proper permissions for .env file
-            chmod 600 "$PROJECT_DIR/.env"
-            
-            log "Environment file configured successfully"
-            echo ""
-            info "Configuration Summary:"
-            info "  Domain: $DOMAIN"
-            info "  N8N Admin User: $N8N_AUTH_USER"
-            info "  Database: $POSTGRES_DB (user: $POSTGRES_USER)"
-            info "  Security: Encryption key and JWT secret configured"
-            echo ""
-            warning "IMPORTANT: Your .env file contains sensitive information."
-            warning "File permissions set to 600 (owner read/write only)"
-            warning "Backup this file securely: $PROJECT_DIR/.env"
-            
         else
-            warning ".env.example not found in repository"
-            warning "You'll need to create .env file manually"
+            log ".env file already exists in project directory - skipping configuration"
         fi
         
         log "Repository cloned and configured successfully"
