@@ -1,17 +1,15 @@
-# Self-hosted AI starter kit
+# Self-hosted AI Starter Kit with Automated NGINX Deployment
 
-**Self-hosted AI Starter Kit** is an open-source Docker Compose template designed to swiftly initialize a comprehensive local AI and low-code development environment.
+**Enhanced Self-hosted AI Starter Kit** is an advanced Docker Compose template with **automated multi-distribution deployment script** designed to swiftly initialize a comprehensive local AI and low-code development environment with production-ready configuration, SSL support, and reverse proxy setup.
 
 ![n8n.io - Screenshot](https://raw.githubusercontent.com/n8n-io/self-hosted-ai-starter-kit/main/assets/n8n-demo.gif)
 
-Curated by <https://github.com/n8n-io>, it combines the self-hosted n8n
-platform with a curated list of compatible AI products and components to
-quickly get started with building self-hosted AI workflows.
+Originally curated by <https://github.com/n8n-io>, this enhanced version adds **enterprise-grade deployment automation** with support for multiple Linux distributions, automatic SSL certificate management, and production monitoring capabilities.
 
 > [!TIP]
 > [Read the announcement](https://blog.n8n.io/self-hosted-ai/)
 
-### What’s included
+### What's included
 
 ✅ [**Self-hosted n8n**](https://n8n.io/) - Low-code platform with over 400
 integrations and advanced AI components
@@ -25,6 +23,24 @@ store with an comprehensive API
 ✅ [**PostgreSQL**](https://www.postgresql.org/) -  Workhorse of the Data
 Engineering world, handles large amounts of data safely.
 
+### 🚀 New Enhanced Features
+
+✅ **Automated Deployment Script** - One-command setup across multiple Linux distributions
+
+✅ **Production-Ready Configuration** - Systemd services, SSL certificates, and security hardening
+
+✅ **Multi-Distribution Support** - Ubuntu, Debian, CentOS, RHEL, Fedora, Amazon Linux, SUSE
+
+✅ **Automatic SSL/TLS** - Let's Encrypt certificate generation and renewal
+
+✅ **NGINX Reverse Proxy** - Production-grade web server configuration
+
+✅ **GPU Profile Support** - Optimized configurations for CPU, NVIDIA GPU, and AMD GPU
+
+✅ **Security Hardening** - Firewall configuration, secure headers, and best practices
+
+✅ **Monitoring & Logging** - Systemd integration with proper logging and health checks
+
 ### What you can build
 
 ⭐️ **AI Agents** for scheduling appointments
@@ -37,21 +53,159 @@ Engineering world, handles large amounts of data safely.
 
 ## Installation
 
-### Cloning the Repository
+### Quick Installation with Automated Deployment Script
+
+**NEW**: We've added a comprehensive deployment script that automates the entire setup process across multiple Linux distributions with SSL support and production-ready configuration.
+
+#### Supported Operating Systems
+
+- **Ubuntu** (18.04, 20.04, 22.04, 24.04)
+- **Debian** (10, 11, 12)
+- **CentOS** (7, 8, 9)
+- **RHEL** (7, 8, 9)
+- **Rocky Linux** (8, 9)
+- **AlmaLinux** (8, 9)
+- **Fedora** (35+)
+- **Amazon Linux 2**
+- **SUSE/openSUSE** (Leap, Tumbleweed)
+
+#### One-Command Deployment
 
 ```bash
-git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
-cd self-hosted-ai-starter-kit
+# Clone the repository
+git clone https://github.com/vighneshanap/self-hosted-ai-starter-kit-nginx-automated-deployment.git
+cd self-hosted-ai-starter-kit-nginx-automated-deployment
+
+# Make the script executable and run it
+chmod +x deployment.sh
+./deployment.sh
+```
+
+#### What the Deployment Script Does
+
+The `deployment.sh` script provides a **complete production-ready setup** with the following features:
+
+🔧 **System Configuration**
+- Automatically detects your Linux distribution and version
+- Updates system packages and installs dependencies
+- Configures appropriate package managers (apt, yum, dnf, zypper)
+
+🐳 **Docker Setup**
+- Installs Docker CE and Docker Compose
+- Configures Docker for your specific distribution
+- Sets up user permissions and group membership
+- Supports GPU configurations (NVIDIA/AMD) with proper container runtime
+
+🌐 **Web Server & SSL**
+- Installs and configures Nginx as reverse proxy
+- Automatic SSL certificate generation with Let's Encrypt
+- Configures proper security headers and HTTPS redirects
+- Handles domain validation and certificate renewal
+
+🔒 **Security & Firewall**
+- Configures distribution-specific firewalls (UFW/firewalld)
+- Sets up proper port access (80, 443, SSH)
+- Generates secure encryption keys and JWT secrets
+- Implements security best practices
+
+⚙️ **N8N Configuration**
+- Creates systemd service for automatic startup and monitoring
+- Configures environment variables for production use
+- Sets up database connections and authentication
+- Supports multiple hardware profiles (CPU/GPU)
+
+🎯 **Hardware Profile Support**
+- **CPU Profile**: Works on all systems, optimized for CPU-only workloads
+- **NVIDIA GPU Profile**: Optimized for NVIDIA GPUs with CUDA support
+- **AMD GPU Profile**: Optimized for AMD GPUs with ROCm support
+
+#### Interactive Setup Process
+
+The script will guide you through:
+
+1. **Domain Configuration**: Enter your subdomain (e.g., `ai.yourcompany.com`)
+2. **SSL Certificate**: Provide email for Let's Encrypt certificate
+3. **Repository Selection**: Use default or custom repository
+4. **Hardware Profile**: Choose CPU, NVIDIA GPU, or AMD GPU
+5. **Authentication**: Set up N8N admin credentials
+6. **Database**: Configure PostgreSQL settings
+7. **Security Keys**: Generate or provide encryption keys
+
+#### Example Usage
+
+```bash
+# Basic deployment with CPU profile
+./deployment.sh
+
+# The script will prompt for:
+# - Domain: ai.yourcompany.com
+# - Email: admin@yourcompany.com
+# - Hardware: CPU Profile
+# - Admin credentials
+# - Database settings
+```
+
+#### Post-Deployment Access
+
+After successful deployment, you can access:
+
+- **N8N Interface**: `https://your-domain.com`
+- **Service Management**: `sudo systemctl status n8n-ai`
+- **Logs**: `sudo journalctl -u n8n-ai -f`
+- **SSL Status**: `sudo certbot certificates`
+
+#### Requirements for Automated Deployment
+
+- **Root Access**: User must have sudo privileges
+- **Internet Connection**: For downloading packages and Docker images
+- **Domain DNS**: Your domain must point to the server's IP address
+- **Open Ports**: Ports 80 and 443 should be accessible
+- **Minimum Resources**: 2GB RAM, 10GB disk space
+
+#### Troubleshooting Automated Deployment
+
+If the deployment script encounters issues:
+
+```bash
+# Check service status
+sudo systemctl status n8n-ai
+sudo systemctl status nginx
+
+# View logs
+sudo journalctl -u n8n-ai -f
+sudo journalctl -u nginx -f
+
+# Test SSL certificate
+sudo certbot certificates
+sudo certbot renew --dry-run
+
+# Restart services
+sudo systemctl restart n8n-ai
+sudo systemctl restart nginx
+```
+
+### Manual Installation (Advanced Users)
+
+If you prefer manual installation or need custom configuration:
+
+#### Cloning the Repository
+
+```bash
+git clone https://github.com/vighneshanap/self-hosted-ai-starter-kit-nginx-automated-deployment.git
+cd self-hosted-ai-starter-kit-nginx-automated-deployment
 cp .env.example .env # you should update secrets and passwords inside
 ```
 
 ### Running n8n using Docker Compose
 
+> [!NOTE]
+> If you used the automated deployment script above, your N8N instance is already running as a systemd service. Use `sudo systemctl status n8n-ai` to check status.
+
 #### For Nvidia GPU users
 
 ```bash
-git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
-cd self-hosted-ai-starter-kit
+git clone https://github.com/vighneshanap/self-hosted-ai-starter-kit-nginx-automated-deployment.git
+cd self-hosted-ai-starter-kit-nginx-automated-deployment
 cp .env.example .env # you should update secrets and passwords inside
 docker compose --profile gpu-nvidia up
 ```
@@ -59,19 +213,23 @@ docker compose --profile gpu-nvidia up
 > [!NOTE]
 > If you have not used your Nvidia GPU with Docker before, please follow the
 > [Ollama Docker instructions](https://github.com/ollama/ollama/blob/main/docs/docker.md).
+> The automated deployment script can handle NVIDIA GPU setup for you.
 
 ### For AMD GPU users on Linux
 
 ```bash
-git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
-cd self-hosted-ai-starter-kit
+git clone https://github.com/vighneshanap/self-hosted-ai-starter-kit-nginx-automated-deployment.git
+cd self-hosted-ai-starter-kit-nginx-automated-deployment
 cp .env.example .env # you should update secrets and passwords inside
 docker compose --profile gpu-amd up
 ```
 
+> [!NOTE]
+> The automated deployment script can configure AMD GPU support with ROCm drivers automatically.
+
 #### For Mac / Apple Silicon users
 
-If you’re using a Mac with an M1 or newer processor, you can't expose your GPU
+If you're using a Mac with an M1 or newer processor, you can't expose your GPU
 to the Docker instance, unfortunately. There are two options in this case:
 
 1. Run the starter kit fully on CPU, like in the section "For everyone else"
@@ -84,8 +242,8 @@ If you want to run Ollama on your mac, check the
 for installation instructions, and run the starter kit as follows:
 
 ```bash
-git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
-cd self-hosted-ai-starter-kit
+git clone https://github.com/vighneshanap/self-hosted-ai-starter-kit-nginx-automated-deployment.git
+cd self-hosted-ai-starter-kit-nginx-automated-deployment
 cp .env.example .env # you should update secrets and passwords inside
 docker compose up
 ```
@@ -104,8 +262,8 @@ If you're running OLLAMA locally on your Mac (not in Docker), you need to modify
 #### For everyone else
 
 ```bash
-git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
-cd self-hosted-ai-starter-kit
+git clone https://github.com/vighneshanap/self-hosted-ai-starter-kit-nginx-automated-deployment.git
+cd self-hosted-ai-starter-kit-nginx-automated-deployment
 cp .env.example .env # you should update secrets and passwords inside
 docker compose --profile cpu up
 ```
@@ -115,18 +273,18 @@ docker compose --profile cpu up
 The core of the Self-hosted AI Starter Kit is a Docker Compose file, pre-configured with network and storage settings, minimizing the need for additional installations.
 After completing the installation steps above, simply follow the steps below to get started.
 
-1. Open <http://localhost:5678/> in your browser to set up n8n. You’ll only
+1. Open <http://localhost:5678/> in your browser to set up n8n. You'll only
    have to do this once.
 2. Open the included workflow:
    <http://localhost:5678/workflow/srOnR8PAY3u4RSwb>
 3. Click the **Chat** button at the bottom of the canvas, to start running the workflow.
-4. If this is the first time you’re running the workflow, you may need to wait
+4. If this is the first time you're running the workflow, you may need to wait
    until Ollama finishes downloading Llama3.2. You can inspect the docker
    console logs to check on the progress.
 
 To open n8n at any time, visit <http://localhost:5678/> in your browser.
 
-With your n8n instance, you’ll have access to over 400 integrations and a
+With your n8n instance, you'll have access to over 400 integrations and a
 suite of basic and advanced AI nodes such as
 [AI Agent](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/),
 [Text classifier](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.text-classifier/),
@@ -136,9 +294,183 @@ language model and Qdrant as your vector store.
 
 > [!NOTE]
 > This starter kit is designed to help you get started with self-hosted AI
-> workflows. While it’s not fully optimized for production environments, it
+> workflows. While it's not fully optimized for production environments, it
 > combines robust components that work well together for proof-of-concept
 > projects. You can customize it to meet your specific needs
+
+## 🚀 Production Deployment & Management
+
+### Systemd Service Management
+
+If you used the automated deployment script, N8N runs as a systemd service for production reliability:
+
+```bash
+# Check service status
+sudo systemctl status n8n-ai
+
+# Start/stop/restart the service
+sudo systemctl start n8n-ai
+sudo systemctl stop n8n-ai
+sudo systemctl restart n8n-ai
+
+# Enable/disable automatic startup
+sudo systemctl enable n8n-ai
+sudo systemctl disable n8n-ai
+
+# View real-time logs
+sudo journalctl -u n8n-ai -f
+
+# View recent logs
+sudo journalctl -u n8n-ai --since "1 hour ago"
+```
+
+### SSL Certificate Management
+
+The deployment script sets up automatic SSL certificate renewal:
+
+```bash
+# Check certificate status
+sudo certbot certificates
+
+# Test renewal (dry run)
+sudo certbot renew --dry-run
+
+# Force renewal
+sudo certbot renew --force-renewal
+
+# View certificate details
+sudo openssl x509 -in /etc/letsencrypt/live/your-domain.com/fullchain.pem -text -noout
+```
+
+### Nginx Configuration Management
+
+```bash
+# Test Nginx configuration
+sudo nginx -t
+
+# Reload Nginx (without downtime)
+sudo systemctl reload nginx
+
+# Restart Nginx
+sudo systemctl restart nginx
+
+# Check Nginx status
+sudo systemctl status nginx
+
+# View Nginx logs
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+```
+
+### Environment Configuration
+
+Your environment configuration is stored in `/opt/self-hosted-ai-starter-kit/.env`:
+
+```bash
+# Edit environment variables
+sudo nano /opt/self-hosted-ai-starter-kit/.env
+
+# View current configuration (excluding sensitive data)
+cat /opt/self-hosted-ai-starter-kit/.env | grep -v PASSWORD | grep -v SECRET | grep -v KEY
+
+# After changing .env, restart the service
+sudo systemctl restart n8n-ai
+```
+
+### Security Best Practices
+
+The deployment script implements several security measures:
+
+- **Firewall Configuration**: Only necessary ports (22, 80, 443) are open
+- **SSL/TLS Encryption**: All traffic encrypted with Let's Encrypt certificates
+- **Secure Headers**: HSTS, X-Frame-Options, Content Security Policy
+- **File Permissions**: Restrictive permissions on configuration files
+- **Basic Authentication**: Optional additional layer of security
+
+```bash
+# Check firewall status (Ubuntu/Debian)
+sudo ufw status
+
+# Check firewall status (CentOS/RHEL/Fedora)
+sudo firewall-cmd --list-all
+
+# View security headers
+curl -I https://your-domain.com
+```
+
+### Backup and Recovery
+
+#### Database Backup
+
+```bash
+# Create database backup
+docker exec -t $(docker ps -qf "name=postgres") pg_dump -U root n8n > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Restore database backup
+cat backup_file.sql | docker exec -i $(docker ps -qf "name=postgres") psql -U root -d n8n
+```
+
+#### Full System Backup
+
+```bash
+# Backup entire project directory
+sudo tar -czf n8n_backup_$(date +%Y%m%d_%H%M%S).tar.gz /opt/self-hosted-ai-starter-kit/
+
+# Backup configuration files
+sudo cp /opt/self-hosted-ai-starter-kit/.env /path/to/secure/backup/
+sudo cp -r /etc/nginx/sites-available/ /path/to/secure/backup/
+sudo cp -r /etc/letsencrypt/ /path/to/secure/backup/
+```
+
+### Monitoring and Health Checks
+
+```bash
+# Check if N8N is responding
+curl -f http://localhost:5678/health || echo "N8N is not responding"
+
+# Check SSL certificate expiry
+echo | openssl s_client -connect your-domain.com:443 2>/dev/null | openssl x509 -noout -dates
+
+# Monitor resource usage
+docker stats
+
+# Check disk space
+df -h
+
+# Monitor logs for errors
+sudo journalctl -u n8n-ai | grep -i error
+```
+
+### Scaling and Performance
+
+#### Resource Optimization
+
+```bash
+# Monitor Docker container resources
+docker stats
+
+# Check system resources
+htop
+free -h
+iostat
+
+# Optimize Docker images
+docker system prune -a
+```
+
+#### Performance Tuning
+
+For production environments, consider:
+
+- **Database Connection Pooling**: Configure PostgreSQL connection limits
+- **Memory Allocation**: Adjust Docker memory limits in docker-compose.yml
+- **CPU Limits**: Set appropriate CPU limits for containers
+- **Log Rotation**: Configure log rotation to prevent disk space issues
+
+```bash
+# Example: Increase PostgreSQL shared buffers
+sudo docker exec -it $(docker ps -qf "name=postgres") psql -U root -d n8n -c "SHOW shared_buffers;"
+```
 
 ## Upgrading
 
@@ -162,6 +494,105 @@ docker compose create && docker compose up
 docker compose --profile cpu pull
 docker compose create && docker compose --profile cpu up
 ```
+
+* ### For Production Deployments (with systemd service):
+
+```bash
+# Stop the service
+sudo systemctl stop n8n-ai
+
+# Pull latest images
+cd /opt/self-hosted-ai-starter-kit
+sudo docker compose --profile cpu pull  # or gpu-nvidia/gpu-amd
+
+# Start the service
+sudo systemctl start n8n-ai
+
+# Verify the upgrade
+sudo systemctl status n8n-ai
+```
+
+## Tips & tricks
+
+### Accessing local files
+
+The self-hosted AI starter kit will create a shared folder (by default,
+located in the same directory) which is mounted to the n8n container and
+allows n8n to access files on disk. This folder within the n8n container is
+located at `/data/shared` -- this is the path you'll need to use in nodes that
+interact with the local filesystem.
+
+### Enhanced Environment Configuration
+
+The repository includes a comprehensive `.env.example` file with all necessary configuration options:
+
+```bash
+# Domain and SSL settings
+DOMAIN=your-domain.com
+N8N_PROTOCOL=https
+N8N_HOST=your-domain.com
+WEBHOOK_URL=https://your-domain.com
+
+# Authentication settings
+N8N_BASIC_AUTH_ACTIVE=true
+N8N_BASIC_AUTH_USER=your-email@domain.com
+N8N_BASIC_AUTH_PASSWORD=your-secure-password
+
+# Database configuration
+POSTGRES_USER=root
+POSTGRES_PASSWORD=your-secure-db-password
+POSTGRES_DB=n8n
+
+# Security keys (auto-generated by deployment script)
+N8N_ENCRYPTION_KEY=your-32-character-encryption-key
+N8N_USER_MANAGEMENT_JWT_SECRET=your-jwt-secret
+
+# AI/ML settings
+OLLAMA_HOST=ollama:11434  # or host.docker.internal:11434 for Mac
+
+# Additional security settings
+N8N_SECURE_COOKIE=true
+N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+GENERIC_TIMEZONE=UTC
+```
+
+#### Generating Secure Keys
+
+```bash
+# Generate encryption key (32 characters)
+openssl rand -hex 16
+
+# Generate JWT secret
+openssl rand -base64 32
+
+# Generate strong password
+openssl rand -base64 24
+```
+
+### Docker Compose Profiles
+
+The enhanced docker-compose.yml supports different hardware profiles:
+
+- **CPU Profile** (`--profile cpu`): Default, works on all systems
+- **NVIDIA GPU Profile** (`--profile gpu-nvidia`): Optimized for NVIDIA GPUs
+- **AMD GPU Profile** (`--profile gpu-amd`): Optimized for AMD GPUs with ROCm
+
+```bash
+# CPU only (default)
+docker compose --profile cpu up
+
+# NVIDIA GPU
+docker compose --profile gpu-nvidia up
+
+# AMD GPU  
+docker compose --profile gpu-amd up
+```
+
+**Nodes that interact with the local filesystem**
+
+- [Read/Write Files from Disk](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.filesreadwrite/)
+- [Local File Trigger](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.localfiletrigger/)
+- [Execute Command](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.executecommand/)
 
 ## 👓 Recommended reading
 
@@ -198,38 +629,22 @@ your local n8n instance.
 
 - [Tax Code Assistant](https://n8n.io/workflows/2341-build-a-tax-code-assistant-with-qdrant-mistralai-and-openai/)
 - [Breakdown Documents into Study Notes with MistralAI and Qdrant](https://n8n.io/workflows/2339-breakdown-documents-into-study-notes-using-templating-mistralai-and-qdrant/)
-- [Financial Documents Assistant using Qdrant and](https://n8n.io/workflows/2335-build-a-financial-documents-assistant-using-qdrant-and-mistralai/) [Mistral.ai](http://mistral.ai/)
+- [Financial Documents Assistant using Qdrant and](https://n8n.io/workflows/2335-build-a-financial-documents-assistant-using-qdrant-and-mistralai/) [Mistral.ai](http://mistral.ai/)
 - [Recipe Recommendations with Qdrant and Mistral](https://n8n.io/workflows/2333-recipe-recommendations-with-qdrant-and-mistral/)
 
-## Tips & tricks
-
-### Accessing local files
-
-The self-hosted AI starter kit will create a shared folder (by default,
-located in the same directory) which is mounted to the n8n container and
-allows n8n to access files on disk. This folder within the n8n container is
-located at `/data/shared` -- this is the path you’ll need to use in nodes that
-interact with the local filesystem.
-
-**Nodes that interact with the local filesystem**
-
-- [Read/Write Files from Disk](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.filesreadwrite/)
-- [Local File Trigger](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.localfiletrigger/)
-- [Execute Command](https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.executecommand/)
-
-## 📜 License
+## 📜 License
 
 This project is licensed under the Apache License 2.0 - see the
 [LICENSE](LICENSE) file for details.
 
-## 💬 Support
+## 💬 Support
 
 Join the conversation in the [n8n Forum](https://community.n8n.io/), where you
 can:
 
-- **Share Your Work**: Show off what you’ve built with n8n and inspire others
+- **Share Your Work**: Show off what you've built with n8n and inspire others
   in the community.
-- **Ask Questions**: Whether you’re just getting started or you’re a seasoned
+- **Ask Questions**: Whether you're just getting started or you're a seasoned
   pro, the community and our team are ready to support with any challenges.
 - **Propose Ideas**: Have an idea for a feature or improvement? Let us know!
-  We’re always eager to hear what you’d like to see next.
+  We're always eager to hear what you'd like to see next.
